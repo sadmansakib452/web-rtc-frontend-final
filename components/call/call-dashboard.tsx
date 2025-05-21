@@ -1,58 +1,67 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import type { RootState } from "@/redux/store"
-import { setCallActive, setCallUser } from "@/redux/features/call/callSlice"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { PhoneIcon, Video } from "lucide-react"
-import AudioCall from "@/components/call/audio-call"
-import IncomingCallModal from "@/components/call/incoming-call-modal"
-import { useWebRTC } from "@/hooks/use-webrtc"
-import type { User } from "@/types/user"
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
+import { setCallActive, setCallUser } from "@/redux/features/call/callSlice";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PhoneIcon, Video } from "lucide-react";
+import AudioCall from "@/components/call/audio-call";
+import IncomingCallModal from "@/components/call/incoming-call-modal";
+import { useWebRTC } from "@/hooks/use-webrtc";
+import type { User } from "@/types/user";
 
 export default function CallDashboard() {
-  const dispatch = useDispatch()
-  const { isCallActive, user: callUser } = useSelector((state: RootState) => state.call)
-  const { user } = useSelector((state: RootState) => state.auth)
-  const { connectSocket, contacts, initiateCall, acceptCall, rejectCall, incomingCallData } = useWebRTC()
-  const [callType, setCallType] = useState<"audio" | "video">("audio")
+  const dispatch = useDispatch();
+  const { isCallActive, user: callUser } = useSelector(
+    (state: RootState) => state.call
+  );
+  const { user } = useSelector((state: RootState) => state.auth);
+  const {
+    connectSocket,
+    contacts,
+    initiateCall,
+    acceptCall,
+    rejectCall,
+    incomingCallData,
+  } = useWebRTC();
+  const [callType, setCallType] = useState<"audio" | "video">("audio");
 
   // 1. Connect to socket when component mounts
   useEffect(() => {
     if (user?.token) {
-      connectSocket(user.token)
+      connectSocket(user.token);
     }
-  }, [user, connectSocket])
+  }, [user, connectSocket]);
 
   // 2. Handle starting a call
   const handleStartCall = (contact: User, type: "audio" | "video") => {
-    setCallType(type)
-    dispatch(setCallUser(contact))
-    dispatch(setCallActive(true))
-    initiateCall(contact.id, type, contact.appointmentId)
-  }
+    setCallType(type);
+    dispatch(setCallUser(contact));
+    dispatch(setCallActive(true));
+    initiateCall(contact.id, type, contact.appointmentId?.toString());
+  };
 
   // 3. Handle accepting an incoming call
   const handleAcceptCall = () => {
     if (incomingCallData) {
-      acceptCall(incomingCallData)
+      acceptCall(incomingCallData);
     }
-  }
+  };
 
   // 4. Handle rejecting an incoming call
   const handleRejectCall = () => {
     if (incomingCallData) {
-      rejectCall(incomingCallData)
+      rejectCall(incomingCallData);
     }
-  }
+  };
 
   // 5. Show call interface if call is active
   if (isCallActive && callUser) {
-    return <AudioCall callType={callType} />
+    return <AudioCall callType={callType} />;
   }
 
   return (
@@ -68,22 +77,36 @@ export default function CallDashboard() {
 
           <TabsContent value="contacts" className="space-y-4">
             {contacts.length === 0 ? (
-              <p className="text-center text-gray-500 py-4">No contacts available</p>
+              <p className="text-center text-gray-500 py-4">
+                No contacts available
+              </p>
             ) : (
-              contacts.map((contact) => (
-                <Card key={contact.id} className="overflow-hidden">
+              contacts.map((contact, index) => (
+                <Card
+                  key={`${contact.id}-${index}`}
+                  className="overflow-hidden"
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12">
-                          <AvatarImage src={contact.img || "/placeholder.svg"} alt={contact.name} />
-                          <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
+                          <AvatarImage
+                            src={contact.img || "/placeholder.svg"}
+                            alt={contact.name}
+                          />
+                          <AvatarFallback>
+                            {contact.name.charAt(0)}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
                           <h3 className="font-medium">{contact.name}</h3>
-                          <p className="text-sm text-gray-500">{contact.title || contact.type || "User"}</p>
+                          <p className="text-sm text-gray-500">
+                            {contact.title || contact.type || "User"}
+                          </p>
                           {contact.appointmentId && (
-                            <p className="text-xs text-gray-400">Appointment #{contact.appointmentId}</p>
+                            <p className="text-xs text-gray-400">
+                              Appointment #{contact.appointmentId}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -126,5 +149,5 @@ export default function CallDashboard() {
         onReject={handleRejectCall}
       />
     </>
-  )
+  );
 }

@@ -110,20 +110,30 @@ export function useWebRTC() {
   const initiateCall = async (receiverId: string, type: "audio" | "video", appointmentId?: string) => {
     try {
       // 6.1. Use provided appointmentId or default
-      const callAppointmentId = appointmentId || "appointment-123"
+      const callAppointmentId = appointmentId || "appointment-123";
 
       // 6.2. Start call
-      await webRTCService.initiateCall(receiverId, callAppointmentId, type === "video")
+      await webRTCService.initiateCall(
+        receiverId,
+        callAppointmentId,
+        type === "video"
+      );
 
-      // 6.3. Update Redux state
-      if (webRTCService.localStream) {
-        dispatch(setLocalStream(webRTCService.localStream))
+      // // 6.3. Update Redux state
+      // if (webRTCService.localStream) {
+      //   dispatch(setLocalStream(webRTCService.localStream))
+      // }
+
+      // Use the getter method instead of accessing private property
+      const localStream = webRTCService.getLocalStream();
+      if (localStream) {
+        dispatch(setLocalStream(localStream));
       }
 
-      const newCallId = `call-${Date.now()}`
-      dispatch(setCallId(newCallId))
+      const newCallId = `call-${Date.now()}`;
+      dispatch(setCallId(newCallId));
 
-      setCallStatus("calling")
+      setCallStatus("calling");
     } catch (error) {
       console.error("Error initiating call:", error)
       setCallStatus("error")
@@ -133,15 +143,21 @@ export function useWebRTC() {
   // 7. Accept incoming call
   const acceptCall = async (callData: any) => {
     try {
-      await webRTCService.acceptCall(callData)
+      await webRTCService.acceptCall(callData);
 
-      if (webRTCService.localStream) {
-        dispatch(setLocalStream(webRTCService.localStream))
+      // if (webRTCService.localStream) {
+      //   dispatch(setLocalStream(webRTCService.localStream))
+      // }
+
+      // Use the getter method instead of accessing private property
+      const localStream = webRTCService.getLocalStream();
+      if (localStream) {
+        dispatch(setLocalStream(localStream));
       }
 
-      dispatch(setCallId(callData.callId))
-      setCallStatus("connecting")
-      setIncomingCallData(null)
+      dispatch(setCallId(callData.callId));
+      setCallStatus("connecting");
+      setIncomingCallData(null);
     } catch (error) {
       console.error("Error accepting call:", error)
       setCallStatus("error")
@@ -176,11 +192,11 @@ export function useWebRTC() {
 
   // 11. Toggle camera
   const toggleCamera = useCallback(() => {
-    const newState = !webRTCService.camOff
-    webRTCService.toggleCamera(newState)
-    dispatch(setCameraOff(newState))
-    return newState
-  }, [dispatch])
+    const newState = !webRTCService.getCameraState(); // Use getter method instead of direct access
+    webRTCService.toggleCamera(newState);
+    dispatch(setCameraOff(newState));
+    return newState;
+  }, [dispatch]);
 
   // 12. Start recording
   const startRecording = useCallback(() => {
@@ -222,3 +238,4 @@ export function useWebRTC() {
     isRecording,
   }
 }
+
